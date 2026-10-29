@@ -48,6 +48,7 @@ class Rule:
     label: str
     fix: str
     keep: str = ""
+    context: str = ""
     flags: int = 0
 
 
@@ -149,6 +150,7 @@ class Hit:
     label: str
     fix: str
     keep: str = ""
+    context: str = ""
 
 
 @dataclass
@@ -242,12 +244,13 @@ def scan(text: str, lang: str) -> Report:
     for i, line in enumerate(lines, 1):
         if not line.strip():
             continue
+        ctx = "table" if line.lstrip().startswith("|") else ""
         for rule in rules:
             for m in re.finditer(rule.pattern, line, rule_flags(rule)):
                 rep.hits.append(Hit(
                     line=i, col=m.start() + 1, text=m.group(0)[:60],
                     family=rule.family, severity=rule.severity,
-                    label=rule.label, fix=rule.fix, keep=rule.keep,
+                    label=rule.label, fix=rule.fix, keep=rule.keep, context=ctx,
                 ))
     rep.hits.extend(structure_hits(lines, lang))
 
@@ -266,7 +269,6 @@ def scan(text: str, lang: str) -> Report:
 
 
 TERM_PATTERNS = [
-    (r"[“\"「]([\u4e00-\u9fa5]{2,10})[”\"」]", "引号名词", 1),
     (r"[\u4e00-\u9fa5]{2,6}(?:体系|闭环|飞轮|抓手|底座|生态|链路|矩阵|心智|势能|引擎)", "复合抽象名词", 0),
     (r"(?:[A-Za-z][A-Za-z\-]*\s+){1,3}(?:framework|model|loop|flywheel|matrix)", "英文框架名", 0),
 ]
@@ -318,9 +320,13 @@ def compute_stats(text: str, hits: list, lang: str) -> dict:
         sentences = len(re.findall(r"[.!?;]", text)) or 1
         units = len(re.findall(r"\b\w+\b", text))
         unit_label, min_units = "words", 40
-    strong = sum(1 for h in hits if h.severity == "strong" and h.family in HABIT_FAMILIES)
-    weak = sum(1 for h in hits if h.severity == "weak" and h.family in HABIT_FAMILIES)
-    register = sum(1 for h in hits if h.family not in HABIT_FAMILIES)
+    def counted(h):
+        # Table rows usually mention a phrase rather than use it.
+        return h.context != "table"
+
+    strong = sum(1 for h in hits if h.severity == "strong" and h.family in HABIT_FAMILIES and counted(h))
+    weak = sum(1 for h in hits if h.severity == "weak" and h.family in HABIT_FAMILIES and counted(h))
+    register = sum(1 for h in hits if h.family not in HABIT_FAMILIES or not counted(h))
     density = round((strong * 1000) / max(units, 1), 2)
     return {
         "sentences": sentences,
@@ -329,6 +335,7 @@ def compute_stats(text: str, hits: list, lang: str) -> dict:
         "strong_hits": strong,
         "weak_hits": weak,
         "register_hits": register,
+        "table_hits": sum(1 for h in hits if h.context == "table"),
         "strong_per_1000_units": density,
         "verdict": density_verdict(density, strong, weak, units, min_units),
     }
@@ -360,7 +367,7 @@ def render(rep: Report, path: str, lang: str) -> str:
         f"language: {lang} | {label}: {st['units']} | sentences: {st['sentences']}",
         f"habit hits: strong={st['strong_hits']} weak={st['weak_hits']} "
         f"({st['strong_per_1000_units']} per 1000 {label}) "
-        f"| register/structure: {st['register_hits']}",
+        f"| register/structure: {st['register_hits']} | table/example rows: {st['table_hits']} (mentions, verify before editing)",
         f"verdict: {st['verdict']}",
         f"corpus: {rep.corpus}",
     ]
