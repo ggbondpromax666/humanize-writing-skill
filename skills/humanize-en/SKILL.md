@@ -211,6 +211,26 @@ Short is not automatically better.
 | Rhythm | 四字格、短句与流水句交替 | varied finite clauses; fragments are a tell |
 | Fix | 拆"的"字定语、还原动词 | 拆从句、还原主谓、去名词化 |
 
+## 6.8 Corpus growth loop (write back every session)
+
+This skill is not read-only. **After every edit or audit, if you meet a tell that is not in the corpus, add it**, so the next invocation catches it. That is the difference between a skill and a one-shot prompt.
+
+| Situation | Action |
+|---|---|
+| Stable shape (regex + keep-condition are clear) | `python scripts/corpus_tool.py add --lang en --fam stock --sev weak --re "..." --label "..." --keep "..." --fix "..."` |
+| Suspicious but not yet bounded | `python scripts/corpus_tool.py observe --lang en --text "..." --note "why it looked wrong"` |
+| An existing entry misfires or misses | edit `data/ai-tells.en.json` (often: demote `strong` to `weak`) and say so in the commit message |
+
+**Admission rules**:
+
+1. `--keep` is mandatory. If you cannot state when the hit is legitimate, log it with `observe` instead.
+2. New entries default to `weak`. Promote to `strong` only with real cases where one sighting justified an edit.
+3. Dialect, spoken idiom, and genre conventions (legal boilerplate, journal formatting) do not go in — they are not AI tells.
+4. Run `corpus_tool.py validate` after adding, and confirm the next scan produces no fresh false positives.
+5. Add one family at a time; never bulk-import unverified words.
+
+Current size (`--stats`): about 190 Chinese and 130 English entries across stock / defensive / explanatory / coined / platform. **Expanding it is the default, not the exception.**
+
 ## 7. Genre and voice
 
 | Genre | Default force | Watch for |

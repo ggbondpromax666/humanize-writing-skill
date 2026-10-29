@@ -74,20 +74,23 @@ The skills run in one of four modes, inferred from the request:
 
 Audit mode for coined terms also returns the **term ledger**.
 
-## Optional: candidate scanner
+## Corpus and candidate scanner
 
-`scripts/scan.py` is a *candidate finder*, not a judge. It reports positions so a human or an agent can check context.
+`data/ai-tells.zh.json` and `data/ai-tells.en.json` hold the rule corpus: one regex per entry, plus a **keep-condition** (when the hit is legitimate) and a fix direction. `scripts/scan.py` loads it at runtime, so you can extend the corpus without touching code. Schema and contribution rules: [data/README.md](data/README.md).
 
 ```bash
-python scripts/scan.py draft.md            # markdown report
-python scripts/scan.py draft.md --json     # machine-readable
-python scripts/scan.py --lang zh draft.txt # force language
-cat draft.txt | python scripts/scan.py -   # stdin
+python scripts/scan.py --stats              # entry counts by family/severity, invalid regexes
+python scripts/scan.py draft.md             # markdown report
+python scripts/scan.py draft.md --json      # machine-readable
+python scripts/scan.py --lang zh draft.txt  # force language
+cat draft.txt | python scripts/scan.py -    # stdin
 ```
 
-It checks stock formulas, defensive fillers, restatement, coined-term triggers, and sentence structure (length, clause stacking, 的-modifier stacks). It skips fenced code blocks. No dependencies beyond the standard library.
+It checks stock formulas, defensive fillers, restatement, coined-term triggers, and sentence structure (length, clause stacking, 的-modifier stacks), and skips fenced code blocks. Standard library only.
 
-**A hit is not a reason to edit.** Every pattern has keep-conditions the script cannot see.
+**A hit is not a reason to edit.** Every entry carries a keep-condition the regex cannot evaluate; the report prints it in a `keep if` column.
+
+`scripts/corpus_tool.py` maintains the corpus (`add` / `observe` / `validate` / `stats`). **After each session, add any tell you found that is not yet in it**, so the next invocation catches it. Admission rules and schema: [data/README.md](data/README.md).
 
 ## Design principles
 

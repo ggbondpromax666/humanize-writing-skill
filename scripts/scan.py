@@ -19,8 +19,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import pathlib
 import re
 import sys
+from collections import Counter
 from dataclasses import dataclass, field
 
 # ---------------------------------------------------------------------------
@@ -30,15 +32,16 @@ from dataclasses import dataclass, field
 @dataclass
 class Rule:
     pattern: str
-    family: str          # stock | defensive | explanatory | coined
+    family: str          # stock | defensive | explanatory | coined | platform
     severity: str        # strong | weak
     label: str
     fix: str
+    keep: str = ""
     flags: int = 0
 
 
-def R(pattern, family, severity, label, fix, flags=0):
-    return Rule(pattern, family, severity, label, fix, flags)
+def R(pattern, family, severity, label, fix, keep="", flags=0):
+    return Rule(pattern, family, severity, label, fix, keep, flags)
 
 
 ZH_RULES = [
@@ -140,6 +143,43 @@ EN_RULES = [
 
 CODE_FENCE = re.compile(r"^\s*(```|~~~)")
 
+DATA_DIR = pathlib.Path(__file__).resolve().parent.parent / "data"
+CORPUS_FILES = {"zh": "ai-tells.zh.json", "en": "ai-tells.en.json"}
+
+
+def load_corpus(lang: str):
+    """Load the JSON corpus if present; return (rules, label, warnings).
+
+    The corpus is the primary source. The inline tables in this file are a
+    fallback so the script still works if copied somewhere without data/.
+    """
+    path = DATA_DIR / CORPUS_FILES.get(lang, "")
+    if not CORPUS_FILES.get(lang) or not path.is_file():
+        return None, "inline fallback (data/ not found)", []
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return None, f"inline fallback (corpus unreadable: {exc})", []
+
+    rules, warnings = [], []
+    for raw in payload.get("entries", []):
+        try:
+            rule = Rule(
+                pattern=raw["re"],
+                family=raw.get("fam", "stock"),
+                severity=raw.get("sev", "weak"),
+                label=raw.get("label", ""),
+                fix=raw.get("fix", ""),
+                keep=raw.get("keep", ""),
+            )
+            re.compile(rule.pattern)
+        except (KeyError, re.error, TypeError) as exc:
+            warnings.append(f"{raw.get('id', '?')}: {exc}")
+            continue
+        rules.append(rule)
+    label = f"data/{path.name} v{payload.get('version', '?')} ({len(rules)} entries)"
+    return rules, label, warnings
+
 
 # ---------------------------------------------------------------------------
 # Analysis
@@ -154,6 +194,7 @@ class Hit:
     severity: str
     label: str
     fix: str
+    keep: str = ""
 
 
 @dataclass
@@ -161,6 +202,8 @@ class Report:
     hits: list = field(default_factory=list)
     terms: list = field(default_factory=list)
     stats: dict = field(default_factory=dict)
+    corpus: str = ""
+    warnings: list = field(default_factory=list)
 
 
 def strip_code(text: str) -> str:
@@ -176,11 +219,22 @@ def strip_code(text: str) -> str:
 
 
 def pick_rules(lang: str):
-    if lang == "zh":
-        return ZH_RULES
-    if lang == "en":
-        return EN_RULES
-    return ZH_RULES + EN_RULES
+    """Return (rules, corpus_label, warnings). Prefers data/, falls back to inline."""
+    if lang == "auto":
+        rules, labels, warns = [], [], []
+        for code, inline in (("zh", ZH_RULES), ("en", EN_RULES)):
+            loaded, label, w = load_corpus(code)
+            if loaded is None:
+                loaded, label = inline, "inline fallback"
+            rules.extend(loaded)
+            labels.append(f"{code}: {label}")
+            warns.extend(w)
+        return rules, "; ".join(labels), warns
+    inline = ZH_RULES if lang == "zh" else EN_RULES
+    loaded, label, warns = load_corpus(lang)
+    if loaded is None:
+        return inline, label, warns
+    return loaded, label, warns
 
 
 def guess_lang(text: str) -> str:
@@ -236,8 +290,8 @@ def structure_hits(lines, lang: str) -> list:
 def scan(text: str, lang: str) -> Report:
     clean = strip_code(text)
     lines = clean.splitlines()
-    rules = pick_rules(lang)
-    rep = Report()
+    rules, corpus_label, corpus_warnings = pick_rules(lang)
+    rep = Report(corpus=corpus_label, warnings=corpus_warnings)
     for i, line in enumerate(lines, 1):
         if not line.strip():
             continue
@@ -247,7 +301,7 @@ def scan(text: str, lang: str) -> Report:
                 rep.hits.append(Hit(
                     line=i, col=m.start() + 1, text=m.group(0)[:60],
                     family=rule.family, severity=rule.severity,
-                    label=rule.label, fix=rule.fix,
+                    label=rule.label, fix=rule.fix, keep=rule.keep,
                 ))
     rep.hits.extend(structure_hits(lines, lang))
     # The same span can be claimed by two cross-listed rules; keep one.
@@ -359,19 +413,23 @@ def render(rep: Report, path: str, lang: str) -> str:
         f"| weak hits: {rep.stats['weak_hits']}"
     )
     out.append(f"verdict: {rep.stats['verdict']}")
+    out.append(f"corpus: {rep.corpus}")
+    if rep.warnings:
+        out.append(f"corpus warnings: {len(rep.warnings)} (run --stats to list)")
     out.append("")
-    out.append("A hit is a candidate, not a verdict. Check context before editing.")
+    out.append("A hit is a candidate, not a verdict. Check the keep-condition before editing.")
     out.append("")
 
     if rep.hits:
         out.append("## Stock formulas, defenses, explanations")
         out.append("")
-        out.append("| line | severity | family | hit | label | suggested fix |")
-        out.append("|---|---|---|---|---|---|")
+        out.append("| line | severity | family | hit | label | keep if | suggested fix |")
+        out.append("|---|---|---|---|---|---|---|")
         for h in sorted(rep.hits, key=lambda h: (h.line, h.col)):
             snippet = h.text.replace("|", "\\|")
+            keep = (h.keep or "—").replace("|", "\\|")
             out.append(
-                f"| {h.line} | {h.severity} | {h.family} | `{snippet}` | {h.label} | {h.fix} |"
+                f"| {h.line} | {h.severity} | {h.family} | `{snippet}` | {h.label} | {keep} | {h.fix} |"
             )
         out.append("")
     else:
@@ -401,11 +459,30 @@ def render(rep: Report, path: str, lang: str) -> str:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Find candidate AI-writing tells (zh/en).")
-    ap.add_argument("path", help="file to scan, or - for stdin")
+    ap.add_argument("path", nargs="?", help="file to scan, or - for stdin")
     ap.add_argument("--lang", choices=["zh", "en", "auto"], default="auto")
     ap.add_argument("--json", action="store_true", help="machine-readable output")
     ap.add_argument("--no-terms", action="store_true", help="skip term candidates")
+    ap.add_argument("--stats", action="store_true", help="print corpus coverage and exit")
     args = ap.parse_args(argv)
+
+    if args.stats:
+        for code in ("zh", "en"):
+            rules, label, warns = pick_rules(code)
+            fams = Counter(r.family for r in rules)
+            sevs = Counter(r.severity for r in rules)
+            fam_txt = ", ".join(f"{k}={v}" for k, v in sorted(fams.items()))
+            print(f"{code}: {label}")
+            print(f"    strong={sevs.get('strong', 0)} weak={sevs.get('weak', 0)} | {fam_txt}")
+            if warns:
+                print(f"    invalid entries: {len(warns)}")
+                for w in warns[:10]:
+                    print(f"      - {w}")
+        return 0
+
+    if not args.path:
+        print("error: a path is required unless --stats is used", file=sys.stderr)
+        return 2
 
     try:
         text = sys.stdin.read() if args.path == "-" else open(args.path, encoding="utf-8").read()
@@ -422,6 +499,8 @@ def main(argv=None) -> int:
         payload = {
             "path": args.path,
             "language": lang,
+            "corpus": rep.corpus,
+            "corpus_warnings": rep.warnings,
             "stats": rep.stats,
             "hits": [h.__dict__ for h in rep.hits],
             "terms": rep.terms,

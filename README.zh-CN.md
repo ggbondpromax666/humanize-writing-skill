@@ -83,6 +83,8 @@ cat draft.txt | python scripts/scan.py -   # 标准输入
 
 **命中不等于该改。** 每条规则都有脚本看不见的保留条件。
 
+`scripts/corpus_tool.py` 负责维护语料库（`add` / `observe` / `validate` / `stats`）。**每次用完把新发现的痕迹回写**，下次自动生效。入库纪律与字段说明见 [data/README.md](data/README.md)。
+
 ## 设计原则
 
 1. **事实先于风格**：任何改写都不许新增事实、数字、引文或来源。
