@@ -1,5 +1,7 @@
 # Coined-term audit (English)
 
+> **Source**: original framework; inspired by [humanizer](https://github.com/blader/humanizer) §10, [Humanizer-zh](https://github.com/op7418/Humanizer-zh) §10, and [no-ai-slop](https://github.com/petergyang/no-ai-slop) (weasel attribution). See [ATTRIBUTION.md](../../../ATTRIBUTION.md).
+
 The most dangerous AI tell is not empty prose. It is **inventing a term that sounds technical and then using it as the argument.** Once the reader accepts the word, every claim built on it rests on nothing.
 
 This class is worse than the others because:

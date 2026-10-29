@@ -1,5 +1,7 @@
 # Explanatory bloat: identification and repair
 
+> **Source**: original to this project, informed by [humanizer](https://github.com/blader/humanizer) §26 and [no-ai-slop](https://github.com/petergyang/no-ai-slop). See [ATTRIBUTION.md](../../../ATTRIBUTION.md).
+
 Read this when "cut the explanation" is unclear.
 
 Explanatory bloat is prose the reader **did not ask for and does not gain from**. It reads smoothly and logically, which is why it survives every sentence-level cleanup. It is also the most stable structural signature of AI text: a model writes for the widest possible reader, so it assumes the reader knows nothing.

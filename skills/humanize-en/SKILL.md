@@ -7,6 +7,8 @@ metadata:
   language: en
 ---
 
+> **Provenance**: this skill merges and rewrites four MIT projects (blader/humanizer, op7418/Humanizer-zh, Devilyuu/anti-defensive-writing-zh, petergyang/no-ai-slop). Per-file mapping and originality claims: [ATTRIBUTION.md](../../ATTRIBUTION.md). No AI corpus is used.
+
 # Humanize Writing (English)
 
 Write to one reader about one thing. Decide what the reader should understand, believe, or do, then choose what stays.

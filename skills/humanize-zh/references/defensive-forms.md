@@ -1,5 +1,7 @@
 # 防御性表述：识别、判别与改法
 
+> **出处**：改编自 [Devilyuu/anti-defensive-writing-zh](https://github.com/Devilyuu/anti-defensive-writing-zh)（MIT）的 `references/defensive-forms.md`，经重写与增补；"中英对照"一节为原创。完整来源对照见 [ATTRIBUTION.md](../../../ATTRIBUTION.md)。
+
 "拆防御"一步拿不准时读。
 
 防御性写作指作者或模型**为了预先回避质疑**而写出的、不给读者新信息的文字：无对象的自贬、重复免责、层层对冲、虚设反方、流程自述、安抚。

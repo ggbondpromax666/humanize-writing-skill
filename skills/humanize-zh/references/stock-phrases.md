@@ -1,5 +1,7 @@
 # AI 固定句式检测清单（中文）
 
+> **出处**：综合自 [anti-defensive-writing-zh](https://github.com/Devilyuu/anti-defensive-writing-zh) `references/patterns-zh.md`（C/E 层）、[blader/humanizer](https://github.com/blader/humanizer) §1–§25、[no-ai-slop](https://github.com/petergyang/no-ai-slop) 词表，按功能重排并补保留条件。具体句式属公共观察，不归任何一方独有。见 [ATTRIBUTION.md](../../../ATTRIBUTION.md)。
+
 长文、深改、只诊断时读。**这是候选信号表，不是禁词表。**
 
 ## 使用说明

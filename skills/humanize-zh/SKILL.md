@@ -7,6 +7,8 @@ metadata:
   language: zh-CN
 ---
 
+> **出处与融合范围**：本技能融合并重写了四个 MIT 项目（blader/humanizer、op7418/Humanizer-zh、Devilyuu/anti-defensive-writing-zh、petergyang/no-ai-slop），逐文件对照与原创声明见 [ATTRIBUTION.md](../../ATTRIBUTION.md)。本项目不使用任何"AI 语料库"。
+
 # 去 AI 味写作（中文）
 
 写给一个具体读者，交代一件具体的事。先判断文字要让读者理解、相信或做什么，再决定留哪些句子。

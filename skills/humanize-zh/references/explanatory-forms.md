@@ -1,5 +1,7 @@
 # 解释性表述：识别、判别与改法
 
+> **出处**：本项目原创。概念受 [blader/humanizer](https://github.com/blader/humanizer) §26（re-explaining）与 [no-ai-slop](https://github.com/petergyang/no-ai-slop)（interpretive metadiscourse）启发。见 [ATTRIBUTION.md](../../../ATTRIBUTION.md)。
+
 "删解释"一步拿不准时读。
 
 解释性表述指**读者没有要求、也没有从中获得新信息**的说明文字。它读起来通顺、逻辑自洽，所以最容易漏；它也是 AI 文本最稳定的结构特征——模型为"最广泛的读者"写作，于是默认读者什么都不懂。

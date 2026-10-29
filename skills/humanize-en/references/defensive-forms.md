@@ -1,5 +1,7 @@
 # Defensive writing: identification and repair
 
+> **Source**: adapted from [blader/humanizer](https://github.com/blader/humanizer) (§5, §9) and [no-ai-slop](https://github.com/petergyang/no-ai-slop), with the six tests rewritten from the Chinese edition. Full mapping: [ATTRIBUTION.md](../../../ATTRIBUTION.md).
+
 Read this when "cut the defenses" is unclear.
 
 Defensive writing is prose written **to pre-empt an objection** rather than to inform: unearned self-deprecation, repeated disclaimers, stacked hedging, strawman rebuttals, process narration, reassurance.

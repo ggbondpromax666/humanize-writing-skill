@@ -103,6 +103,18 @@ It checks stock formulas, defensive fillers, restatement, coined-term triggers, 
 - It does not judge authorship and will not claim a text is or is not AI-written.
 - The scanner is a heuristic; expect false positives in legal, academic, and public-administration prose where the "formulas" are genre conventions.
 
+## Provenance and the "AI corpus" question
+
+**There is no AI corpus here.** No scraped dataset, no labelled training set, no corpus statistics. Every list is a hand-built inventory of candidate signals, drawn from three places:
+
+1. public observations, chiefly Wikipedia's ["Signs of AI writing"](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) (which is explicit that these signs are *descriptive, not prescriptive*);
+2. the hand-written lists in the four upstream MIT projects;
+3. direct observation of model output while editing real drafts.
+
+So this project makes **no accuracy, recall, or "AI detection rate" claims**, and the word lists are not frequency counts. A single item is never evidence.
+
+**What was merged, from where?** [ATTRIBUTION.md](ATTRIBUTION.md) has a per-file table (adapted / synthesized / original), a per-family source map, what counts as original here, and how to cite. Every reference file also opens with a one-line provenance note.
+
 ## License and credits
 
 MIT. Methodology merged and rewritten from:

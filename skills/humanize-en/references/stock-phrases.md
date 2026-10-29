@@ -1,5 +1,7 @@
 # Stock AI formulas (English): detection list
 
+> **Source**: synthesized from [blader/humanizer](https://github.com/blader/humanizer) §1–§25, [no-ai-slop](https://github.com/petergyang/no-ai-slop), and Wikipedia's "Signs of AI writing"; reorganised by function with keep-conditions added. Individual formulas are common observations, not owned by one project. See [ATTRIBUTION.md](../../../ATTRIBUTION.md).
+
 Read this for long drafts, deep edits, and audit-only requests. **A candidate list, not a banned-word list.**
 
 ## How to use
