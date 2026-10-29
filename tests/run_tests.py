@@ -10,6 +10,7 @@ Stdlib only, no pytest. Each case writes a fixture to a temp dir, runs
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -31,9 +32,10 @@ def run(name: str, text: str, *args: str, encoding: str = "utf-8") -> tuple:
     tmp = pathlib.Path(tempfile.mkdtemp(prefix="hws-test-"))
     path = tmp / name
     path.write_text(text, encoding=encoding) if encoding == "utf-8" else path.write_bytes(text.encode(encoding))
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
     proc = subprocess.run(
         [sys.executable, str(SCAN), str(path), "--json", *args],
-        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        capture_output=True, text=True, encoding="utf-8", errors="replace", env=env,
     )
     report = json.loads(proc.stdout) if proc.returncode == 0 and proc.stdout.strip() else {}
     return proc.returncode, report, proc.stderr
@@ -155,7 +157,30 @@ def duplicate_spans_collapse() -> str:
     return f"{len(r['hits'])} hit(s), no duplicate span"
 
 
+@case
+def paper_excerpt_true_positives_without_false_ones() -> str:
+    """Academic register: catch the slop, leave the scholarly parts alone."""
+    text = (ROOT / "tests" / "fixtures" / "paper-zh.md").read_text(encoding="utf-8")
+    rc, r, _ = run("paper.md", text)
+    assert rc == 0
+    got = labels(r)
+    required = {"假因果开场", "段首评论壳", "拔高意义", "模糊归因", "归因未论证", "复述前文", "空展望"}
+    missing = required - set(got)
+    assert not missing, f"missed {missing}; got {got}"
+    # Precision guards: these were real false positives before the fix.
+    assert "伪学术命名候选" not in got, got
+    assert "教案栏目词" not in got, got
+    # Scholarly keep-conditions must not be turned into hits.
+    assert "成果丰硕套话" in got  # weak platform hit is fine
+    assert r["stats"]["table_hits"] == 0
+    return f"strong={r['stats']['strong_hits']} labels={sorted(set(got))}"
+
+
 def main() -> int:
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
     failures = 0
     for fn in CASES:
         try:

@@ -176,6 +176,11 @@ def cmd_observe(args) -> int:
 
 
 def main(argv=None) -> int:
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
     ap = argparse.ArgumentParser(description="Maintain the AI-tell corpus.")
     sub = ap.add_subparsers(dest="cmd", required=True)
 

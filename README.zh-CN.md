@@ -78,13 +78,15 @@ python scripts/scan.py draft.md --json     # 机器可读
 python scripts/scan.py --lang zh draft.txt # 强制语言
 python scripts/scan.py paper.tex          # 自动剥离 LaTeX 公式与命令
 python scripts/scan.py draft.md --strict   # 表格行也计入使用
-python tests/run_tests.py                  # 12 条回归测试
+python tests/run_tests.py                  # 13 条回归测试
 cat draft.txt | python scripts/scan.py -   # 标准输入
 ```
 
 它查固定句式、防御填充、复述、生造词触发词，以及句子结构（句长、从句密度、"的"字堆叠），自动跳过代码块。只用标准库。
 
 **命中不等于该改。** 每条规则都有脚本看不见的保留条件。
+
+论文选段的完整诊断示例见 [examples/paper-zh-audit.md](examples/paper-zh-audit.md)：8 处真阳性，方法细节、样本局限、带出处引用全部未被误判。
 
 `scripts/corpus_tool.py` 负责维护语料库（`add` / `observe` / `validate` / `stats`）。**每次用完把新发现的痕迹回写**，下次自动生效。入库纪律与字段说明见 [data/README.md](data/README.md)。
 

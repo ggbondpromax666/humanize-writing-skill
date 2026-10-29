@@ -454,6 +454,12 @@ def render(rep: Report, path: str, lang: str) -> str:
 
 
 def main(argv=None) -> int:
+    # Windows consoles default to GBK; force UTF-8 so Chinese labels survive.
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
     ap = argparse.ArgumentParser(description="Find candidate AI-writing tells (zh/en).")
     ap.add_argument("path", nargs="?", help="file to scan, or - for stdin")
     ap.add_argument("--lang", choices=["zh", "en", "mixed", "auto"], default="auto")

@@ -85,13 +85,15 @@ python scripts/scan.py draft.md --json      # machine-readable
 python scripts/scan.py --lang zh draft.txt  # force language
 python scripts/scan.py paper.tex           # auto-strips LaTeX math and markup
 python scripts/scan.py draft.md --strict    # count table rows as usage too
-python tests/run_tests.py                   # 12 regression tests
+python tests/run_tests.py                   # 13 regression tests
 cat draft.txt | python scripts/scan.py -    # stdin
 ```
 
 It checks stock formulas, defensive fillers, restatement, coined-term triggers, and sentence structure (length, clause stacking, 的-modifier stacks), and skips fenced code blocks. Standard library only.
 
 **A hit is not a reason to edit.** Every entry carries a keep-condition the regex cannot evaluate; the report prints it in a `keep if` column.
+
+A worked example of an academic excerpt (abstract + intro + methods + results) is in [examples/paper-zh-audit.md](examples/paper-zh-audit.md): 8 true positives, zero false positives on method details, sample limits, and cited sources.
 
 `scripts/corpus_tool.py` maintains the corpus (`add` / `observe` / `validate` / `stats`). **After each session, add any tell you found that is not yet in it**, so the next invocation catches it. Admission rules and schema: [data/README.md](data/README.md).
 
