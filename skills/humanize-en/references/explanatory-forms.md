@@ -1,6 +1,6 @@
 # Explanatory bloat: identification and repair
 
-> **Source**: original to this project, informed by [humanizer](https://github.com/blader/humanizer) §26 and [no-ai-slop](https://github.com/petergyang/no-ai-slop). See [ATTRIBUTION.md](../../../ATTRIBUTION.md).
+> **Source**: original to this project, informed by [humanizer](https://github.com/blader/humanizer) §26 and [no-ai-slop](https://github.com/petergyang/no-ai-slop). See [ATTRIBUTION.md](https://github.com/ggbondpromax666/humanize-writing-skill/blob/main/ATTRIBUTION.md).
 
 Read this when "cut the explanation" is unclear.
 
@@ -15,7 +15,7 @@ Explanation is not the problem. Onboarding docs, teaching material, and science 
 
 ---
 
-## 1. Two families, thirteen shapes
+## 1. Four families, fifteen shapes
 
 ### Family A — Restatement (the reader already read it)
 

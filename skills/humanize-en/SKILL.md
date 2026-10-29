@@ -7,7 +7,7 @@ metadata:
   language: en
 ---
 
-> **Provenance**: this skill merges and rewrites four MIT projects (blader/humanizer, op7418/Humanizer-zh, Devilyuu/anti-defensive-writing-zh, petergyang/no-ai-slop). Per-file mapping and originality claims: [ATTRIBUTION.md](../../ATTRIBUTION.md). No AI corpus is used.
+> **Provenance**: this skill merges and rewrites four MIT projects (blader/humanizer, op7418/Humanizer-zh, Devilyuu/anti-defensive-writing-zh, petergyang/no-ai-slop). Per-file mapping and originality claims: [ATTRIBUTION.md](https://github.com/ggbondpromax666/humanize-writing-skill/blob/main/ATTRIBUTION.md). No AI corpus is used.
 
 # Humanize Writing (English)
 
@@ -15,7 +15,7 @@ Write to one reader about one thing. Decide what the reader should understand, b
 
 **The goal is not "sound human." It is "be clear and credible to this reader."** Do not try to beat AI detectors, do not judge authorship, do not output an "AI score." Detectors guess. Named patterns are evidence a reader can check.
 
-## Four hard limits
+## 1. Four hard limits
 
 1. **Add no facts**: no number, date, name, title, quote, source, mechanism, result, or promise that is not in the source.
 2. **Lose no information**: every factual claim must be traceable to the original. If you cannot point to it, revert the edit.
@@ -24,7 +24,7 @@ Write to one reader about one thing. Decide what the reader should understand, b
 
 Priority when rules collide: **facts and promises > necessary boundaries and instructions > the user's explicit request > the writer's voice and genre > de-templating**.
 
-## Seven families of AI tells
+## 2. Seven families of AI tells
 
 | # | Family | Typical shape | Detail |
 |---|---|---|---|
@@ -35,6 +35,8 @@ Priority when rules collide: **facts and promises > necessary boundaries and ins
 | E | Template structure | definition → three parts → uplift; identical paragraph shapes; paired headings | §5 |
 | F | Formatting residue | chatbot wrappers, markdown debris, bold decoration, emoji templates | §6 |
 | G | Sentence bloat | 45+ word sentences, 3+ stacked subordinate clauses, `-ing` chains, `of` chains | §6.5 |
+
+The corpus uses five family names (stock / defensive / explanatory / coined / platform). Mapping: stock=C, defensive=A, explanatory=B, coined=D, platform=register-bound formulas for a specific genre (see data/README.md).
 
 A–D are **candidate signal lists, not banned-word lists.** Every row carries a keep-condition. The most common failure is not missing a tell; it is deleting a sentence that was doing real work.
 
@@ -229,7 +231,7 @@ This skill is not read-only. **After every edit or audit, if you meet a tell tha
 4. Run `corpus_tool.py validate` after adding, and confirm the next scan produces no fresh false positives.
 5. Add one family at a time; never bulk-import unverified words.
 
-Current size (`--stats`): about 190 Chinese and 130 English entries across stock / defensive / explanatory / coined / platform. **Expanding it is the default, not the exception.**
+Current size (`--stats`): about 195 Chinese and 135 English entries across stock / defensive / explanatory / coined / platform. **Expanding it is the default, not the exception.**
 
 ## 7. Genre and voice
 
@@ -247,6 +249,7 @@ If the user supplies a writing sample, **the sample outranks this file**: senten
 
 - **Edit (default)**: the final draft, then a `---` line, then the note. The note covers only what the user must know or decide: whole sentences or paragraphs removed and why, uncertain calls, missing material worth adding. Three items max.
 - **Audit**: no rewrite. For each finding: location, exact snippet (≤20 words), problem in plain language, fix direction. Order by impact; lead with the one or two that matter most.
+- **Write from scratch**: ask for reader, purpose, and material first, then draft from the material, never from a background-current-solution-outlook frame.
 - **File mode**: change prose only; leave code blocks, inline code, commands, paths, URLs, YAML, table data, and heading levels alone. Report what changed, what needs verification, and the before/after word count.
 - **Never** add "Certainly!" or "Here's what I found", and never write "I preserved your meaning" or "no facts were changed" as a self-assurance.
 

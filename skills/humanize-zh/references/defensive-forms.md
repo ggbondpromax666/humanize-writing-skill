@@ -1,6 +1,6 @@
 # 防御性表述：识别、判别与改法
 
-> **出处**：改编自 [Devilyuu/anti-defensive-writing-zh](https://github.com/Devilyuu/anti-defensive-writing-zh)（MIT）的 `references/defensive-forms.md`，经重写与增补；"中英对照"一节为原创。完整来源对照见 [ATTRIBUTION.md](../../../ATTRIBUTION.md)。
+> **出处**：改编自 [Devilyuu/anti-defensive-writing-zh](https://github.com/Devilyuu/anti-defensive-writing-zh)（MIT）的 `references/defensive-forms.md`，经重写与增补；"中英对照"一节为原创。完整来源对照见 [ATTRIBUTION.md](https://github.com/ggbondpromax666/humanize-writing-skill/blob/main/ATTRIBUTION.md)。
 
 "拆防御"一步拿不准时读。
 

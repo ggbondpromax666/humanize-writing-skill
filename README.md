@@ -128,3 +128,11 @@ MIT. Methodology merged and rewritten from:
 - [petergyang/no-ai-slop](https://github.com/petergyang/no-ai-slop) (MIT) — edit/audit modes, minimum effective edit
 
 New in this project: the explanatory-bloat taxonomy, stock-formula detection, coined-term detection, the term ledger, the bilingual split, and the sentence-craft rules.
+
+## Blind review
+
+This revision came out of a blind review by three independent reviewers who only saw the repository: a writing editor (14 findings), an adversarial tester (17, three high-severity bugs), and a consistency/engineering reviewer (23). Their full reports are in [`review/`](review/).
+
+Fixed in this pass: mixed-language detection, case-sensitive `[A-Z]` acronym rules, duplicate-span hits, unclosed code fences, non-UTF-8 input, short-text verdicts, contradictory rules (source-tag vs purpose-chain in official documents), abstract-vs-informative "Y" in contrast formulas, family-mapping between the SKILL tables and the corpus, broken provenance links after installation, and incomplete attribution for the corpus files.
+
+Still open: the Chinese `platform` family is intentionally larger than the English one (it covers 公文/学术/技术/营销/新闻/职场/教学/邮件 registers that have no direct English equivalent); reference tables and `data/` are maintained in parallel, so a rule added in one is not auto-mirrored in the other.

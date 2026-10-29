@@ -1,6 +1,6 @@
 # 生造名词检测（中文）
 
-> **出处**：本项目原创框架。灵感来自 [humanizer](https://github.com/blader/humanizer) §10（生造复合词）、[Humanizer-zh](https://github.com/op7418/Humanizer-zh) §10、[no-ai-slop](https://github.com/petergyang/no-ai-slop)（weasel attribution）。见 [ATTRIBUTION.md](../../../ATTRIBUTION.md)。
+> **出处**：本项目原创框架。灵感来自 [humanizer](https://github.com/blader/humanizer) §10（生造复合词）、[Humanizer-zh](https://github.com/op7418/Humanizer-zh) §10、[no-ai-slop](https://github.com/petergyang/no-ai-slop)（weasel attribution）。见 [ATTRIBUTION.md](https://github.com/ggbondpromax666/humanize-writing-skill/blob/main/ATTRIBUTION.md)。
 
 AI 写作最隐蔽的问题不是"话说得空"，而是**凭空造一个听起来专业的词，然后拿它当论证用**。读者一旦接受这个词，后面所有推论都建立在不存在的地基上。
 

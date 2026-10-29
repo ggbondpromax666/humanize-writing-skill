@@ -1,6 +1,6 @@
 # 解释性表述：识别、判别与改法
 
-> **出处**：本项目原创。概念受 [blader/humanizer](https://github.com/blader/humanizer) §26（re-explaining）与 [no-ai-slop](https://github.com/petergyang/no-ai-slop)（interpretive metadiscourse）启发。见 [ATTRIBUTION.md](../../../ATTRIBUTION.md)。
+> **出处**：本项目原创。概念受 [blader/humanizer](https://github.com/blader/humanizer) §26（re-explaining）与 [no-ai-slop](https://github.com/petergyang/no-ai-slop)（interpretive metadiscourse）启发。见 [ATTRIBUTION.md](https://github.com/ggbondpromax666/humanize-writing-skill/blob/main/ATTRIBUTION.md)。
 
 "删解释"一步拿不准时读。
 
@@ -15,7 +15,7 @@
 
 ---
 
-## 一、两族十二型
+## 一、四族十五型
 
 ### 甲族｜复述型（读者已经看过）
 

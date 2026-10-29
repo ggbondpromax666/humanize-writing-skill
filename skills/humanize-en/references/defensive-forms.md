@@ -1,6 +1,6 @@
 # Defensive writing: identification and repair
 
-> **Source**: adapted from [blader/humanizer](https://github.com/blader/humanizer) (§5, §9) and [no-ai-slop](https://github.com/petergyang/no-ai-slop), with the six tests rewritten from the Chinese edition. Full mapping: [ATTRIBUTION.md](../../../ATTRIBUTION.md).
+> **Source**: adapted from [blader/humanizer](https://github.com/blader/humanizer) (§5, §9) and [no-ai-slop](https://github.com/petergyang/no-ai-slop), with the six tests rewritten from the Chinese edition. Full mapping: [ATTRIBUTION.md](https://github.com/ggbondpromax666/humanize-writing-skill/blob/main/ATTRIBUTION.md).
 
 Read this when "cut the defenses" is unclear.
 

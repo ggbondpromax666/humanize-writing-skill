@@ -31,7 +31,7 @@
 | `skills/humanize-zh/SKILL.md` | 结构原创，规则融合 | 四个上游 | 七步管线为原创；红线、优先级顺序、文体表、交付格式改编自 anti-defensive-writing-zh 与 Humanizer-zh；编辑/诊断双模式来自 no-ai-slop |
 | `.../humanize-zh/references/defensive-forms.md` | 改编 | **Devilyuu/anti-defensive-writing-zh** `references/defensive-forms.md` | 六道判别、删/留分类表、改法、对称防线均改写自该文件；"中英对照"一节为原创 |
 | `.../humanize-zh/references/explanatory-forms.md` | **原创** | 概念受 blader/humanizer §26（re-explaining）与 no-ai-slop（metadiscourse）启发 | 两族十三型分类、密度诊断、改法四招为本项目原创 |
-| `.../humanize-zh/references/stock-phrases.md` | **综合** | anti-defensive `references/patterns-zh.md`（C/E 层）、blader/humanizer §1–§25、no-ai-slop "Words to cut / Patterns to cut" | 按**功能**重排为 10 类，补保留条件与误报护栏；具体句式是公共观察，不归任何一方独有 |
+| `.../humanize-zh/references/stock-phrases.md` | **综合** | anti-defensive `references/patterns-zh.md`（C/E 层）、blader/humanizer §1–§25、no-ai-slop "Words to cut / Patterns to cut" | 按**功能**重排为 13 类，补保留条件与误报护栏；具体句式是公共观察，不归任何一方独有 |
 | `.../humanize-zh/references/coined-terms.md` | **原创框架** | 灵感来自 humanizer §10（生造复合词）、Humanizer-zh §10、no-ai-slop（weasel attribution） | 五问体检、七形态、处理阶梯、名词账本为原创 |
 | `skills/humanize-en/SKILL.md` | 结构原创，规则融合 | 四个上游 | 同中文版骨架；§6.5 句子工艺为原创 |
 | `.../humanize-en/references/defensive-forms.md` | 改编 | **blader/humanizer**（§9 qualifiers、§5 arguing with no one）+ **no-ai-slop**（editing principles） | 六道判别与对称防线转写自中文版；英文例句为原创 |
@@ -39,6 +39,8 @@
 | `.../humanize-en/references/stock-phrases.md` | **综合** | humanizer §1–§25、no-ai-slop 词表、Wikipedia | 按功能重排；补保留条件 |
 | `.../humanize-en/references/coined-terms.md` | **原创框架** | 同中文版 | 同中文版，英文例句原创 |
 | `scripts/scan.py` | **原创代码** | 规则表派生自本项目 `references/` | 正则、严重度阈值、结构检查、去重、JSON 输出均为原创 |
+| `data/ai-tells.zh.json` / `ai-tells.en.json` | **原创语料库** | 综合自四个上游清单与公共观察（逐族见下节） | 330 条候选信号，每条带保留条件；不含抓取语料或统计标注 |
+| `scripts/corpus_tool.py` | **原创代码** | — | add / observe / validate / stats 增长回路 |
 
 图例：**改编** = 内容主要来自单一上游并重写；**综合** = 多来源合并后重新组织；**原创** = 本项目新写。
 
@@ -55,6 +57,7 @@
 | E 结构模板 | humanizer §19–§20、anti-defensive patterns-zh §D | 中英对照判据 |
 | F 排版残留 | humanizer §19–§22、anti-defensive patterns-zh §F | 中文半角标点与 Markdown 残骸细则 |
 | G 长难句 | **原创**（英文版） | 句长阈值、从句阈值、`-ing`/`of` 链检查、结构扫描 |
+| platform 文体套话 | anti-defensive patterns-zh §H、humanizer §16/§20、no-ai-slop 词表 | 按 8 个文体重组（公文/学术/技术/营销/新闻/职场/教学/邮件），每条注明适用文体 |
 
 ---
 
