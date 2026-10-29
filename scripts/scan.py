@@ -49,6 +49,7 @@ class Rule:
     fix: str
     keep: str = ""
     context: str = ""
+    lang: str = ""
     flags: int = 0
 
 
@@ -160,15 +161,24 @@ def strip_code(text: str) -> str:
     return "\n".join(out)
 
 
+QUOTED = re.compile(r"[\u201c\"\u300c][^\u201d\"\u300d]*[\u201d\"\u300d]")
+
+
+def unquoted(text: str) -> str:
+    """Drop quoted spans: a quotation is mentioned, not used."""
+    return QUOTED.sub(" ", text)
+
+
 def guess_lang(text: str) -> str:
     """Return zh, en, or mixed.
 
     "mixed" matters: judging a bilingual draft as one language silently drops
     half the rules.
     """
+    text = unquoted(text)
     cjk = sum(1 for ch in text if "\u4e00" <= ch <= "\u9fff")
     latin_words = len(re.findall(r"[A-Za-z]{2,}", text))
-    if cjk >= 5 and latin_words >= 8:
+    if cjk >= 3 and latin_words >= 5:
         return "mixed"
     if cjk >= 10 or (len(text) and cjk / len(text) > 0.08):
         return "zh"
@@ -190,6 +200,7 @@ class Hit:
     fix: str
     keep: str = ""
     context: str = ""
+    lang: str = ""
 
 
 @dataclass
@@ -218,6 +229,7 @@ def line_lang(line: str) -> str:
     A Chinese line must not be judged by English patterns and vice versa; that
     is why routing is per line rather than per document.
     """
+    line = unquoted(line)
     cjk = sum(1 for ch in line if "\u4e00" <= ch <= "\u9fff")
     latin_words = len(re.findall(r"[A-Za-z]{2,}", line))
     if cjk == 0:
@@ -227,6 +239,19 @@ def line_lang(line: str) -> str:
     # A word is several characters; compare weights, not counts, so an English
     # sentence quoting six Chinese characters is still English.
     return "zh" if cjk >= latin_words * 3 else "en"
+
+
+def is_bilingual(seg: str) -> bool:
+    """True when one sentence carries both scripts.
+
+    Weighting by length would always pick the longer language, dropping a short
+    Chinese opener glued to a long English clause. Presence is the safer test:
+    run both corpora on such a segment and let keep-conditions sort it out.
+    """
+    seg = unquoted(seg)
+    cjk = sum(1 for ch in seg if "\u4e00" <= ch <= "\u9fff")
+    latin = len(re.findall(r"[A-Za-z]{2,}", seg))
+    return cjk >= 2 and latin >= 2
 
 
 def split_segments(line: str):
@@ -322,15 +347,21 @@ def scan(text: str, lang: str, strict: bool = False) -> Report:
             seg = line[start:end]
             if not seg.strip():
                 continue
-            code = line_lang(seg) if lang == "mixed" else lang
-            lang_lines[code] += 1
-            for rule in rules_by_lang[code]:
-                for m in re.finditer(rule.pattern, seg, rule_flags(rule)):
-                    rep.hits.append(Hit(
-                        line=i, col=start + m.start() + 1, text=m.group(0)[:60],
-                        family=rule.family, severity=rule.severity,
-                        label=rule.label, fix=rule.fix, keep=rule.keep, context=ctx,
-                    ))
+            if lang == "mixed":
+                primary = line_lang(seg)
+                codes = ["zh", "en"] if is_bilingual(seg) else [primary]
+            else:
+                codes = [lang]
+            lang_lines[codes[0]] += 1
+            for code in codes:
+                for rule in rules_by_lang[code]:
+                    for m in re.finditer(rule.pattern, seg, rule_flags(rule)):
+                        rep.hits.append(Hit(
+                            line=i, col=start + m.start() + 1, text=m.group(0)[:60],
+                            family=rule.family, severity=rule.severity,
+                            label=rule.label, fix=rule.fix, keep=rule.keep,
+                            context=ctx, lang=code,
+                        ))
     rep.hits.extend(structure_hits(lines, lang))
 
     # Same span from several rules: keep the strongest reading, not all of them.
@@ -462,14 +493,14 @@ def render(rep: Report, path: str, lang: str) -> str:
         out += [
             "## Hits",
             "",
-            "| line | severity | family | hit | label | keep if | suggested fix |",
-            "|---|---|---|---|---|---|---|",
+            "| line | lang | severity | family | hit | label | keep if | suggested fix |",
+            "|---|---|---|---|---|---|---|---|",
         ]
         for h in sorted(rep.hits, key=lambda h: (h.line, h.col)):
             snippet = h.text.replace("|", "\\|")
             keep = (h.keep or "—").replace("|", "\\|")
             out.append(
-                f"| {h.line} | {h.severity} | {h.family} | `{snippet}` | {h.label} | {keep} | {h.fix} |"
+                f"| {h.line} | {h.lang or '-'} | {h.severity} | {h.family} | `{snippet}` | {h.label} | {keep} | {h.fix} |"
             )
         out.append("")
     else:

@@ -193,6 +193,19 @@ def mixed_lines_use_their_own_corpus() -> str:
 
 
 @case
+def bilingual_sentence_runs_both_corpora_with_lang_tags() -> str:
+    """A half-Chinese half-English sentence is checked against both corpora."""
+    text = "值得注意的是，It is worth noting that this matters.\n"
+    rc, r, _ = run("bilingual.md", text)
+    assert rc == 0
+    assert r["language"] == "mixed", r["language"]
+    pairs = {(h["lang"], h["label"]) for h in r["hits"]}
+    assert ("zh", "段首评论壳") in pairs, pairs
+    assert ("en", "paragraph opener, no referent") in pairs, pairs
+    return f"both corpora fired, pairs={sorted(pairs)}"
+
+
+@case
 def english_line_quoting_chinese_stays_english() -> str:
     """A quoted Chinese phrase inside an English sentence is not a Chinese line."""
     text = "We cite the Chinese phrase “值得注意的是” only as an example.\n"

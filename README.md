@@ -91,7 +91,9 @@ cat draft.txt | python scripts/scan.py -    # stdin
 
 It checks stock formulas, defensive fillers, restatement, coined-term triggers, and sentence structure (length, clause stacking, 的-modifier stacks), and skips fenced code blocks. Standard library only.
 
-**Language is decided per line, not per file.** In a bilingual draft, a Chinese line is judged only by the Chinese corpus and an English line only by the English corpus; the report shows how the lines were split (`language: mixed (zh 12 / en 8 lines)`). An English sentence that quotes a Chinese phrase is still scanned as English.
+**Language is decided per sentence, not per file.** A mixed draft is split at sentence boundaries; a Chinese sentence is judged only by the Chinese corpus and an English sentence only by the English one. The report shows the split (`language: mixed (zh 12 / en 8 lines)`).
+
+Two edge rules: a sentence that genuinely mixes both scripts runs **both** corpora, and each hit carries a `lang` column saying which corpus fired; text inside quotation marks does not count when deciding the language, so an English sentence quoting a Chinese phrase stays English.
 
 **A hit is not a reason to edit.** Every entry carries a keep-condition the regex cannot evaluate; the report prints it in a `keep if` column.
 
