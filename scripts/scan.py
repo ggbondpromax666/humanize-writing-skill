@@ -254,6 +254,36 @@ def is_bilingual(seg: str) -> bool:
     return cjk >= 2 and latin >= 2
 
 
+def looks_like_enumeration(line: str) -> bool:
+    stripped = line.lstrip()
+    if stripped.startswith(("|", "- ", "* ", "+ ", ">")):
+        return True
+    if re.match(r"\s*\d+[.、)]", line):
+        return True
+    if line.count('"') + line.count("\u201c") + line.count("`") >= 2:
+        return True
+    return "\u3001" in line
+
+
+QUOTE_PAIRS = [("\u201c", "\u201d"), ("\u300c", "\u300d"), ('"', '"'), ("\u2018", "\u2019")]
+
+
+def is_mention(seg: str, start: int, end: int) -> bool:
+    """True when the match sits inside quotes or an inline code span.
+
+    A skill that documents tells will write "not X but Y" in quotes; that is a
+    mention, not a use.
+    """
+    head = seg[:start]
+    for left, right in QUOTE_PAIRS:
+        if left == right:
+            if head.count(left) % 2 == 1:
+                return True
+        elif head.count(left) > head.count(right):
+            return True
+    return head.count("`") % 2 == 1
+
+
 def split_segments(line: str):
     """Split a line into sentence spans, keeping delimiters.
 
@@ -287,10 +317,12 @@ EN_SUBORDINATORS = re.compile(
 )
 
 
-def structure_hits(lines, lang: str) -> list:
+def structure_hits(lines, lang: str, skip=frozenset()) -> list:
     """Sentence-level checks. English fails on subordination; Chinese on stacked 的."""
     hits = []
     for i, line in enumerate(lines, 1):
+            if i in skip:
+                continue
             spans = split_segments(line) if lang == "mixed" else [(0, len(line))]
             for start, end in spans:
                 sent = line[start:end].strip()
@@ -338,10 +370,18 @@ def scan(text: str, lang: str, strict: bool = False) -> Report:
     rules_by_lang, corpus_label, corpus_warnings = load_rules_for(lang)
     rep = Report(corpus=corpus_label, warnings=corpus_warnings)
     lang_lines = {"zh": 0, "en": 0}
+    frontmatter = set()
+    if lines and lines[0].strip() == "---":
+        for idx, raw in enumerate(lines[1:], 2):
+            if raw.strip() == "---":
+                frontmatter = set(range(1, idx + 1))
+                break
     for i, line in enumerate(lines, 1):
         if not line.strip():
             continue
         ctx = "table" if line.lstrip().startswith("|") else ""
+        if i in frontmatter:
+            ctx = "frontmatter"
         spans = split_segments(line) if lang == "mixed" else [(0, len(line))]
         for start, end in spans:
             seg = line[start:end]
@@ -360,9 +400,20 @@ def scan(text: str, lang: str, strict: bool = False) -> Report:
                             line=i, col=start + m.start() + 1, text=m.group(0)[:60],
                             family=rule.family, severity=rule.severity,
                             label=rule.label, fix=rule.fix, keep=rule.keep,
-                            context=ctx, lang=code,
+                            context="mention" if is_mention(line, start + m.start(), start + m.end()) else ctx,
+                            lang=code,
                         ))
-    rep.hits.extend(structure_hits(lines, lang))
+    rep.hits.extend(structure_hits(lines, lang, frontmatter))
+
+    # A line with several hits is usually listing the patterns, not using them,
+    # but only when the line actually looks like a list.
+    per_line = Counter(h.line for h in rep.hits)
+    for h in rep.hits:
+        if h.context != "" or per_line[h.line] < 3:
+            continue
+        source_line = lines[h.line - 1] if 0 < h.line <= len(lines) else ""
+        if looks_like_enumeration(source_line):
+            h.context = "enumeration"
 
     # Same span from several rules: keep the strongest reading, not all of them.
     best = {}
@@ -434,7 +485,7 @@ def compute_stats(text: str, hits: list, lang: str, strict: bool = False) -> dic
         unit_label, min_units = "words", 40
     def counted(h):
         # Table rows usually mention a phrase rather than use it.
-        return strict or h.context != "table"
+        return strict or h.context not in ("table", "enumeration", "frontmatter", "mention")
 
     strong = sum(1 for h in hits if h.severity == "strong" and h.family in HABIT_FAMILIES and counted(h))
     weak = sum(1 for h in hits if h.severity == "weak" and h.family in HABIT_FAMILIES and counted(h))
@@ -448,6 +499,7 @@ def compute_stats(text: str, hits: list, lang: str, strict: bool = False) -> dic
         "weak_hits": weak,
         "register_hits": register,
         "table_hits": sum(1 for h in hits if h.context == "table"),
+        "meta_hits": sum(1 for h in hits if h.context in ("enumeration", "frontmatter", "mention")),
         "strong_per_1000_units": density,
         "verdict": density_verdict(density, strong, weak, units, min_units),
     }
@@ -481,7 +533,7 @@ def render(rep: Report, path: str, lang: str) -> str:
         f"language: {lang}{lang_detail} | {label}: {st['units']} | sentences: {st['sentences']}",
         f"habit hits: strong={st['strong_hits']} weak={st['weak_hits']} "
         f"({st['strong_per_1000_units']} per 1000 {label}) "
-        f"| register/structure: {st['register_hits']} | table/example rows: {st['table_hits']} (mentions, verify before editing)",
+        f"| register/structure: {st['register_hits']} | mentions (table/frontmatter/enumeration): {st['table_hits'] + st['meta_hits']}",
         f"verdict: {st['verdict']}",
         f"corpus: {rep.corpus}",
     ]

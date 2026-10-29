@@ -193,6 +193,17 @@ def mixed_lines_use_their_own_corpus() -> str:
 
 
 @case
+def quoted_mentions_are_not_counted_as_usage() -> str:
+    """A passage that *quotes* a tell is documenting it, not using it."""
+    text = "他在文章里解释过“值得注意的是”这句话为什么是套话。\n"
+    rc, r, _ = run("mention.md", text)
+    assert rc == 0
+    assert r["stats"]["strong_hits"] == 0, r["stats"]
+    assert r["stats"]["meta_hits"] >= 1, r["stats"]
+    return f"meta={r['stats']['meta_hits']}, prose strong=0"
+
+
+@case
 def bilingual_sentence_runs_both_corpora_with_lang_tags() -> str:
     """A half-Chinese half-English sentence is checked against both corpora."""
     text = "值得注意的是，It is worth noting that this matters.\n"
