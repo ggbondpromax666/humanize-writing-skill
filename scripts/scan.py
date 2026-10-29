@@ -212,15 +212,48 @@ def rule_flags(rule: Rule) -> int:
     return rule.flags | re.IGNORECASE
 
 
-def pick_rules(lang: str):
+def line_lang(line: str) -> str:
+    """Language of one line, used to route rules in a mixed document.
+
+    A Chinese line must not be judged by English patterns and vice versa; that
+    is why routing is per line rather than per document.
+    """
+    cjk = sum(1 for ch in line if "\u4e00" <= ch <= "\u9fff")
+    latin_words = len(re.findall(r"[A-Za-z]{2,}", line))
+    if cjk == 0:
+        return "en" if latin_words else "zh"
+    if latin_words == 0:
+        return "zh"
+    # A word is several characters; compare weights, not counts, so an English
+    # sentence quoting six Chinese characters is still English.
+    return "zh" if cjk >= latin_words * 3 else "en"
+
+
+def split_segments(line: str):
+    """Split a line into sentence spans, keeping delimiters.
+
+    Routing happens per segment, so a line holding both a Chinese and an
+    English sentence is judged sentence by sentence.
+    """
+    spans, start = [], 0
+    for m in re.finditer(r"[。！？.!?]", line):
+        spans.append((start, m.end()))
+        start = m.end()
+    if start < len(line):
+        spans.append((start, len(line)))
+    return spans or [(0, len(line))]
+
+
+def load_rules_for(lang: str):
+    """Return ({lang: rules}, label, warnings). Mixed loads both corpora."""
     langs = ["zh", "en"] if lang == "mixed" else [lang]
-    rules, labels, warnings = [], [], []
+    rules_by_lang, labels, warnings = {}, [], []
     for code in langs:
-        loaded, label, warns = load_corpus(code)
-        rules.extend(loaded)
+        rules, label, warns = load_corpus(code)
+        rules_by_lang[code] = rules
         labels.append(label)
         warnings.extend(f"{code}: {w}" for w in warns)
-    return rules, "; ".join(labels), warnings
+    return rules_by_lang, "; ".join(labels), warnings
 
 
 EN_SUBORDINATORS = re.compile(
@@ -232,14 +265,13 @@ EN_SUBORDINATORS = re.compile(
 def structure_hits(lines, lang: str) -> list:
     """Sentence-level checks. English fails on subordination; Chinese on stacked 的."""
     hits = []
-    langs = ["zh", "en"] if lang == "mixed" else [lang]
-    for code in langs:
-        for i, line in enumerate(lines, 1):
-            parts = re.split(r"[。！？]", line) if code == "zh" else re.split(r"[.!?]", line)
-            for sent in parts:
-                sent = sent.strip()
+    for i, line in enumerate(lines, 1):
+            spans = split_segments(line) if lang == "mixed" else [(0, len(line))]
+            for start, end in spans:
+                sent = line[start:end].strip()
                 if not sent:
                     continue
+                code = line_lang(sent) if lang == "mixed" else lang
                 if code == "zh":
                     chars = len(re.findall(r"[\u4e00-\u9fa5]", sent))
                     if chars >= 140:
@@ -278,19 +310,27 @@ def structure_hits(lines, lang: str) -> list:
 def scan(text: str, lang: str, strict: bool = False) -> Report:
     clean = strip_code(text)
     lines = clean.splitlines()
-    rules, corpus_label, corpus_warnings = pick_rules(lang)
+    rules_by_lang, corpus_label, corpus_warnings = load_rules_for(lang)
     rep = Report(corpus=corpus_label, warnings=corpus_warnings)
+    lang_lines = {"zh": 0, "en": 0}
     for i, line in enumerate(lines, 1):
         if not line.strip():
             continue
         ctx = "table" if line.lstrip().startswith("|") else ""
-        for rule in rules:
-            for m in re.finditer(rule.pattern, line, rule_flags(rule)):
-                rep.hits.append(Hit(
-                    line=i, col=m.start() + 1, text=m.group(0)[:60],
-                    family=rule.family, severity=rule.severity,
-                    label=rule.label, fix=rule.fix, keep=rule.keep, context=ctx,
-                ))
+        spans = split_segments(line) if lang == "mixed" else [(0, len(line))]
+        for start, end in spans:
+            seg = line[start:end]
+            if not seg.strip():
+                continue
+            code = line_lang(seg) if lang == "mixed" else lang
+            lang_lines[code] += 1
+            for rule in rules_by_lang[code]:
+                for m in re.finditer(rule.pattern, seg, rule_flags(rule)):
+                    rep.hits.append(Hit(
+                        line=i, col=start + m.start() + 1, text=m.group(0)[:60],
+                        family=rule.family, severity=rule.severity,
+                        label=rule.label, fix=rule.fix, keep=rule.keep, context=ctx,
+                    ))
     rep.hits.extend(structure_hits(lines, lang))
 
     # Same span from several rules: keep the strongest reading, not all of them.
@@ -304,6 +344,8 @@ def scan(text: str, lang: str, strict: bool = False) -> Report:
 
     rep.terms = find_terms(lines)
     rep.stats = compute_stats(clean, rep.hits, lang, strict)
+    if lang == "mixed":
+        rep.stats["lang_lines"] = lang_lines
     return rep
 
 
@@ -401,9 +443,11 @@ def density_verdict(d: float, strong: int, weak: int, units: int, min_units: int
 def render(rep: Report, path: str, lang: str) -> str:
     st = rep.stats
     label = st["unit_label"]
+    lines = st.get("lang_lines") or {}
+    lang_detail = f" (zh {lines['zh']} / en {lines['en']} lines)" if lines else ""
     out = [
         f"# Candidate scan: {path}",
-        f"language: {lang} | {label}: {st['units']} | sentences: {st['sentences']}",
+        f"language: {lang}{lang_detail} | {label}: {st['units']} | sentences: {st['sentences']}",
         f"habit hits: strong={st['strong_hits']} weak={st['weak_hits']} "
         f"({st['strong_per_1000_units']} per 1000 {label}) "
         f"| register/structure: {st['register_hits']} | table/example rows: {st['table_hits']} (mentions, verify before editing)",

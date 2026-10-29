@@ -176,6 +176,36 @@ def paper_excerpt_true_positives_without_false_ones() -> str:
     return f"strong={r['stats']['strong_hits']} labels={sorted(set(got))}"
 
 
+@case
+def mixed_lines_use_their_own_corpus() -> str:
+    """A mixed draft must not run both rule sets over every line."""
+    text = "值得注意的是，这段是中文。\nIt's worth noting that this English line is separate.\n"
+    rc, r, _ = run("route.md", text)
+    assert rc == 0
+    assert r["language"] == "mixed", r["language"]
+    assert r["stats"]["lang_lines"] == {"zh": 1, "en": 1}, r["stats"].get("lang_lines")
+    got = labels(r)
+    assert "段首评论壳" in got, got
+    assert "paragraph opener, no referent" in got, got
+    zh_hits = [h for h in r["hits"] if h["label"] == "段首评论壳"]
+    assert len(zh_hits) == 1 and zh_hits[0]["line"] == 1, zh_hits
+    return f"zh/en routed, hits={len(r['hits'])}"
+
+
+@case
+def english_line_quoting_chinese_stays_english() -> str:
+    """A quoted Chinese phrase inside an English sentence is not a Chinese line."""
+    text = "We cite the Chinese phrase “值得注意的是” only as an example.\n"
+    rc, r, _ = run("en-quote.md", text)
+    assert rc == 0
+    # The line is routed as English; the quoted Chinese phrase must not fire a
+    # Chinese rule.
+    assert not any("段首" in l for l in labels(r)), labels(r)
+    if r["stats"].get("lang_lines"):
+        assert r["stats"]["lang_lines"]["zh"] == 0, r["stats"]["lang_lines"]
+    return "quoted Chinese did not switch the router"
+
+
 def main() -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")

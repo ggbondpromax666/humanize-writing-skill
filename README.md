@@ -91,6 +91,8 @@ cat draft.txt | python scripts/scan.py -    # stdin
 
 It checks stock formulas, defensive fillers, restatement, coined-term triggers, and sentence structure (length, clause stacking, 的-modifier stacks), and skips fenced code blocks. Standard library only.
 
+**Language is decided per line, not per file.** In a bilingual draft, a Chinese line is judged only by the Chinese corpus and an English line only by the English corpus; the report shows how the lines were split (`language: mixed (zh 12 / en 8 lines)`). An English sentence that quotes a Chinese phrase is still scanned as English.
+
 **A hit is not a reason to edit.** Every entry carries a keep-condition the regex cannot evaluate; the report prints it in a `keep if` column.
 
 A worked example of an academic excerpt (abstract + intro + methods + results) is in [examples/paper-zh-audit.md](examples/paper-zh-audit.md): 8 true positives, zero false positives on method details, sample limits, and cited sources.
