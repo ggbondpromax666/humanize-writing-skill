@@ -83,6 +83,9 @@ python scripts/scan.py --stats              # entry counts by family/severity, i
 python scripts/scan.py draft.md             # markdown report
 python scripts/scan.py draft.md --json      # machine-readable
 python scripts/scan.py --lang zh draft.txt  # force language
+python scripts/scan.py paper.tex           # auto-strips LaTeX math and markup
+python scripts/scan.py draft.md --strict    # count table rows as usage too
+python tests/run_tests.py                   # 12 regression tests
 cat draft.txt | python scripts/scan.py -    # stdin
 ```
 

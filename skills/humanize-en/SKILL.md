@@ -250,7 +250,7 @@ If the user supplies a writing sample, **the sample outranks this file**: senten
 - **Edit (default)**: the final draft, then a `---` line, then the note. The note covers only what the user must know or decide: whole sentences or paragraphs removed and why, uncertain calls, missing material worth adding. Three items max.
 - **Audit**: no rewrite. For each finding: location, exact snippet (≤20 words), problem in plain language, fix direction. Order by impact; lead with the one or two that matter most.
 - **Write from scratch**: ask for reader, purpose, and material first, then draft from the material, never from a background-current-solution-outlook frame.
-- **File mode**: change prose only; leave code blocks, inline code, commands, paths, URLs, YAML, table data, and heading levels alone. Report what changed, what needs verification, and the before/after word count.
+- **File mode**: change prose only; for `.tex` the scanner strips math environments and commands first (`--format tex`); leave code blocks, inline code, commands, paths, URLs, YAML, table data, and heading levels alone. Report what changed, what needs verification, and the before/after word count.
 - **Never** add "Certainly!" or "Here's what I found", and never write "I preserved your meaning" or "no facts were changed" as a self-assurance.
 
 ## 9. Pre-delivery checklist

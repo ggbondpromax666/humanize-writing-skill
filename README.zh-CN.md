@@ -76,6 +76,9 @@ DSH 之类支持"技能目录"的 agent：把 skills 路径指向 `humanize-writ
 python scripts/scan.py draft.md            # Markdown 报告
 python scripts/scan.py draft.md --json     # 机器可读
 python scripts/scan.py --lang zh draft.txt # 强制语言
+python scripts/scan.py paper.tex          # 自动剥离 LaTeX 公式与命令
+python scripts/scan.py draft.md --strict   # 表格行也计入使用
+python tests/run_tests.py                  # 12 条回归测试
 cat draft.txt | python scripts/scan.py -   # 标准输入
 ```
 

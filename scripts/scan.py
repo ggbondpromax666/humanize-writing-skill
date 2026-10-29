@@ -80,6 +80,45 @@ def load_corpus(lang: str):
 # ---------------------------------------------------------------------------
 # Input handling
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# LaTeX prose extraction
+# ---------------------------------------------------------------------------
+
+MATH_ENV = re.compile(
+    r"\\begin\{(equation\*?|align\*?|gather\*?|displaymath|math|array|cases|matrix|pmatrix|bmatrix|aligned|split)\}"
+)
+TEXT_CMD = re.compile(r"\\(?:textbf|textit|emph|underline|text|mathrm|mbox|textrm|textsf)\{([^{}]*)\}")
+
+
+def strip_latex(text: str) -> str:
+    """Keep prose, drop math and markup, preserving line numbers.
+
+    A .tex file is prose plus markup. Scanning raw source lets `\begin{equation}`
+    and friends act as noise, so math environments and commands are blanked
+    while every line keeps its index.
+    """
+    out, in_env = [], False
+    for line in text.splitlines():
+        line = re.sub(r"(?<!\\)%.*$", "", line)
+        if in_env:
+            if r"\end{" in line:
+                in_env = False
+            out.append("")
+            continue
+        if MATH_ENV.search(line):
+            in_env = True
+            out.append("")
+            continue
+        line = re.sub(r"\$\$.*?\$\$", "", line)
+        line = re.sub(r"\$[^$]*\$", "", line)
+        line = re.sub(r"\\\[.*?\\\]", "", line)
+        line = re.sub(r"\\\(.*?\\\)", "", line)
+        line = TEXT_CMD.sub(r"\1", line)
+        line = re.sub(r"\\[a-zA-Z]+\*?(\[[^\]]*\])?(\{[^{}]*\})?", "", line)
+        line = re.sub(r"\\[^a-zA-Z]", " ", line)
+        out.append(line)
+    return "\n".join(out)
+
 
 CODE_FENCE = re.compile(r"^\s*(```|~~~)")
 
@@ -236,7 +275,7 @@ def structure_hits(lines, lang: str) -> list:
     return hits
 
 
-def scan(text: str, lang: str) -> Report:
+def scan(text: str, lang: str, strict: bool = False) -> Report:
     clean = strip_code(text)
     lines = clean.splitlines()
     rules, corpus_label, corpus_warnings = pick_rules(lang)
@@ -264,7 +303,7 @@ def scan(text: str, lang: str) -> Report:
     rep.hits = list(best.values())
 
     rep.terms = find_terms(lines)
-    rep.stats = compute_stats(clean, rep.hits, lang)
+    rep.stats = compute_stats(clean, rep.hits, lang, strict)
     return rep
 
 
@@ -311,7 +350,7 @@ def find_terms(lines) -> list:
     return terms[:20]
 
 
-def compute_stats(text: str, hits: list, lang: str) -> dict:
+def compute_stats(text: str, hits: list, lang: str, strict: bool = False) -> dict:
     if lang == "zh":
         sentences = len(re.findall(r"[。！？；]", text)) or 1
         units = len(re.findall(r"[\u4e00-\u9fa5]", text))
@@ -322,7 +361,7 @@ def compute_stats(text: str, hits: list, lang: str) -> dict:
         unit_label, min_units = "words", 40
     def counted(h):
         # Table rows usually mention a phrase rather than use it.
-        return h.context != "table"
+        return strict or h.context != "table"
 
     strong = sum(1 for h in hits if h.severity == "strong" and h.family in HABIT_FAMILIES and counted(h))
     weak = sum(1 for h in hits if h.severity == "weak" and h.family in HABIT_FAMILIES and counted(h))
@@ -421,6 +460,10 @@ def main(argv=None) -> int:
     ap.add_argument("--json", action="store_true", help="machine-readable output")
     ap.add_argument("--no-terms", action="store_true", help="skip term candidates")
     ap.add_argument("--stats", action="store_true", help="print corpus coverage and exit")
+    ap.add_argument("--format", choices=["auto", "plain", "tex"], default="auto",
+                    help="auto: .tex files are reduced to prose first")
+    ap.add_argument("--strict", action="store_true",
+                    help="count markdown table rows as usage too")
     args = ap.parse_args(argv)
 
     if args.stats:
@@ -447,9 +490,14 @@ def main(argv=None) -> int:
         print(f"cannot read {args.path}: {exc}", file=sys.stderr)
         return 1
 
+    fmt = args.format
+    if fmt == "auto":
+        fmt = "tex" if str(args.path).lower().endswith((".tex", ".latex")) else "plain"
+    if fmt == "tex":
+        text = strip_latex(text)
     lang = guess_lang(text) if args.lang == "auto" else args.lang
     try:
-        rep = scan(text, lang)
+        rep = scan(text, lang, strict=args.strict)
     except FileNotFoundError as exc:
         print(f"corpus missing: {exc}. Keep data/ next to scripts/.", file=sys.stderr)
         return 1
